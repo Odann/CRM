@@ -18,10 +18,14 @@
     const settings = {
       profile: { name: 'Demo Operator', business: 'Afterlife Marketing' },
       stages: ['Lead', 'Contacted', 'Proposal', 'Negotiation'],
+      stageProbabilities: { Lead: 10, Contacted: 25, Proposal: 50, Negotiation: 75 },
       services: ['Social Media Management', 'Website Management', 'Content Marketing', 'Email Marketing', 'Analytics Reporting', 'Paid Ads'],
       sources: ['Referral', 'Cold Outreach', 'Social Media', 'Website', 'Event'],
       tags: ['Hot', 'Golf', 'Recreation', 'Retail', 'Local', 'Retainer'],
-      logo: ''
+      logo: '',
+      revenueGoal: 10000,
+      theme: { accent: '#ff3b45', glow: true },
+      tourSeen: false
     };
 
     const companies = [
@@ -77,9 +81,11 @@
       id: uid(), title, companyId: C(c), contactId: P(p), value, stage,
       services: sv.map((i) => settings.services[i]), closeDate: day(close), created: day(made),
       history: [{ stage: 'Lead', date: day(made) }].concat(stage === 'Lead' ? [] : [{ stage, date: day(Math.min(close, -1)) }]),
-      notes: ''
+      notes: '', lostReason: stage === 'Lost' ? ['Budget', 'Went with another agency', 'No response', 'Timing'][made % 4] : '',
+      attachments: []
     }));
     const D = (i) => deals[i].id;
+    deals[7].attachments = [{ id: uid(), name: 'Retainer agreement (sample link)', url: 'https://example.com/old-mill-retainer.pdf' }];
 
     const activities = [
       [0, 0, 'Meeting', -8, 'Walked the course and reviewed last season\'s social numbers.'],
@@ -98,26 +104,27 @@
     ].map(([p, d, type, when, note]) => ({ id: uid(), contactId: P(p), dealId: D(d), type, date: day(when), note }));
 
     const tasks = [
-      ['Send revised proposal to Dana', 1, 'High', 0, 0, false],
-      ['Book discovery meeting with Priya', 0, 'Medium', 2, 2, false],
-      ['Follow up on intro email', -2, 'Medium', 3, 3, false],
-      ['Prepare website audit', 4, 'Medium', 4, 4, false],
-      ['Draft contract for Summit Line', 0, 'High', 5, 5, false],
-      ['Build monthly report for Old Mill', 6, 'Low', 8, 7, false],
-      ['Send pricing sheet to Noah', -1, 'High', 10, 9, false],
-      ['Collect testimonials', 10, 'Low', 8, 7, false],
-      ['Schedule gift box posts', -6, 'Medium', 9, 8, true],
-      ['Install analytics tags', -70, 'Medium', 4, 10, true]
-    ].map(([title, due, priority, p, d, done]) => ({ id: uid(), title, due: day(due), priority, contactId: P(p), dealId: D(d), done }));
+      ['Send revised proposal to Dana', 1, 'High', 0, 0, false, 'none'],
+      ['Book discovery meeting with Priya', 0, 'Medium', 2, 2, false, 'none'],
+      ['Follow up on intro email', -2, 'Medium', 3, 3, false, 'none'],
+      ['Prepare website audit', 4, 'Medium', 4, 4, false, 'none'],
+      ['Draft contract for Summit Line', 0, 'High', 5, 5, false, 'none'],
+      ['Build monthly report for Old Mill', 6, 'Low', 8, 7, false, 'monthly'],
+      ['Send pricing sheet to Noah', -1, 'High', 10, 9, false, 'none'],
+      ['Collect testimonials', 10, 'Low', 8, 7, false, 'none'],
+      ['Schedule gift box posts', -6, 'Medium', 9, 8, true, 'none'],
+      ['Install analytics tags', -70, 'Medium', 4, 10, true, 'none'],
+      ['Weekly content check-in', 2, 'Low', 8, 7, false, 'weekly']
+    ].map(([title, due, priority, p, d, done, recur]) => ({ id: uid(), title, due: day(due), priority, contactId: P(p), dealId: D(d), done, recur: recur || 'none' }));
 
     const projects = [
-      ['Old Mill monthly retainer', 6, 7, 'Active', -50, 40, [['Content calendar', true], ['Weekly posts', true], ['Monthly report', false], ['Quarterly strategy review', false]]],
-      ['Holiday gift box campaign', 6, 8, 'Active', -12, 20, [['Product photos', true], ['Ad creative', true], ['Email blast', false], ['Results summary', false]]],
-      ['Kestrel analytics setup', 3, 10, 'Complete', -75, -55, [['Install tags', true], ['Build dashboard', true], ['Training call', true]]],
-      ['Junior camp promotion', 0, 12, 'Planned', 3, 45, [['Landing page copy', false], ['Social ad set', false], ['Registration tracking', false]]]
-    ].map(([name, c, d, status, start, due, dl]) => ({
-      id: uid(), name, companyId: C(c), dealId: D(d), status, start: day(start), due: day(due),
-      deliverables: dl.map(([text, done]) => ({ text, done }))
+      ['Old Mill monthly retainer', 6, 7, 'Active', -50, 40, [['Content calendar', true, -45], ['Weekly posts', true, -10], ['Monthly report', false, 5], ['Quarterly strategy review', false, 40]], 'Billed monthly on the 1st. Check in with Luis before sending the report.'],
+      ['Holiday gift box campaign', 6, 8, 'Active', -12, 20, [['Product photos', true, -10], ['Ad creative', true, -5], ['Email blast', false, 10], ['Results summary', false, 20]], ''],
+      ['Kestrel analytics setup', 3, 10, 'Complete', -75, -55, [['Install tags', true, -70], ['Build dashboard', true, -60], ['Training call', true, -55]], 'Elena is happy with the dashboard. Revisit in Q2.'],
+      ['Junior camp promotion', 0, 12, 'Planned', 3, 45, [['Landing page copy', false, 15], ['Social ad set', false, 30], ['Registration tracking', false, 40]], '']
+    ].map(([name, c, d, status, start, due, dl, notes]) => ({
+      id: uid(), name, companyId: C(c), dealId: D(d), status, start: day(start), due: day(due), notes: notes || '',
+      deliverables: dl.map(([text, done, dd]) => ({ id: uid(), text, done, due: day(dd) }))
     }));
 
     return { settings, companies, contacts, deals, activities, tasks, projects };
@@ -132,6 +139,16 @@
         if (raw) this.data = JSON.parse(raw);
       } catch (e) { this.data = null; }
       if (!this.data || !this.data.settings) { this.data = seed(); this.save(); }
+      /* migrate older saved data forward */
+      const s = this.data.settings;
+      if (!s.stageProbabilities) s.stageProbabilities = {};
+      (this.data.settings.stages || []).forEach((st, i) => { if (s.stageProbabilities[st] == null) s.stageProbabilities[st] = Math.round(((i + 1) / (this.data.settings.stages.length + 1)) * 100); });
+      if (!s.theme) s.theme = { accent: '#ff3b45', glow: true };
+      if (s.revenueGoal == null) s.revenueGoal = 10000;
+      if (s.tourSeen == null) s.tourSeen = false;
+      (this.data.deals || []).forEach((d) => { if (d.attachments == null) d.attachments = []; if (d.lostReason == null) d.lostReason = ''; });
+      (this.data.tasks || []).forEach((t) => { if (!t.recur) t.recur = 'none'; });
+      (this.data.projects || []).forEach((p) => { if (p.notes == null) p.notes = ''; (p.deliverables || []).forEach((x) => { if (!x.id) x.id = uid(); if (x.due == null) x.due = ''; }); });
       return this.data;
     },
     save() {
