@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <!-- Placeholder emblem for Afterlife CRM. Replace this file (or upload a logo in Settings) to use your own. -->
+  <g stroke="#4be8f0" stroke-width="3">
+    <polygon points="200,20 356,110 356,290 200,380 44,290 44,110" opacity=".9"/>
+    <polygon points="200,52 328,126 328,274 200,348 72,274 72,126" opacity=".35"/>
+    <path d="M44 110 L10 90 M356 110 L390 90 M44 290 L10 310 M356 290 L390 310 M200 20 V0 M200 380 V400" opacity=".6"/>
+  </g>
+  <g stroke="#ff3b45" stroke-width="14" stroke-linejoin="miter" stroke-linecap="square">
+    <path d="M124 286 L200 108 L276 286"/>
+    <path d="M152 228 H248"/>
+  </g>
+  <g fill="#fcee0a">
+    <rect x="192" y="182" width="16" height="16" transform="rotate(45 200 190)"/>
+  </g>
+  <g stroke="#4be8f0" stroke-width="2" opacity=".7">
+    <path d="M96 200 H140 M260 200 H304 M200 300 V330"/>
+    <circle cx="96" cy="200" r="5"/><circle cx="304" cy="200" r="5"/><circle cx="200" cy="330" r="5"/>
+  </g>
+</svg>
